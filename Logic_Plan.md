@@ -8,8 +8,7 @@
 **Architecture Pattern:** Cloud-Enabled (Supabase Backend). Uses Supabase for Authentication, Database (PostgreSQL), and Object Storage. Connects to Gemini API for AI processing.
 
 ## 2. User Roles
-**End User:** The primary user who uploads photos, manages their wardrobe, and generates try-on images.
-**System:** The automated processes (AI generation, local database management, cost calculation).
+There is a single end user who uploads their photos, manages their wardrobe, and generates try-on images using their own Gemini API key. Automated backend processes (AI generation, Supabase data management, cost calculation) support this without requiring a separate user account.
 
 ## 3. System Architecture & Tech Stack (Logic Focus)
 - **Backend & Database:** Supabase (PostgreSQL) for structured data.

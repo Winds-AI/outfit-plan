@@ -32,5 +32,5 @@ When a part of one file depends on or relates to another, use the following refe
 
 ## 4. General Guidelines
 - Only render 50 lines at a time from plan files if they get too large, to avoid context overload.
-- Generate infographics and images about flow of app and architecture where necessary to understand properly.
+- Generate infographics and images ( if you can ) about flow of app and architecture where necessary to understand properly.
 - **Ask questions openly** without limits. Take time to think about the future and plan properly—there's no hurry. Check available tools and MCP servers; use them when helpful.
