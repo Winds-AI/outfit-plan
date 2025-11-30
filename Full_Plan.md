@@ -3,14 +3,16 @@ Functional Requirements Document: Orbit Style
 Product Name: Orbit Style
 
 Description: A mobile-first, Progressive Web Application (PWA) that allows users to perform virtual clothing try-ons. Users upload photos of themselves and clothing items, utilizing Google's Gemini GenAI API to merge them realistically.
-Architecture Pattern: Local-First (Client-side logic with IndexedDB storage). No backend server is required for the application logic; it connects directly to the Gemini API.
+Architecture Pattern: Cloud-Enabled (Supabase Backend). Uses Supabase for Authentication, Database (PostgreSQL), and Object Storage. Connects to Gemini API for AI processing.
 2. User Roles
 End User: The primary user who uploads photos, manages their wardrobe, and generates try-on images.
 System: The automated processes (AI generation, local database management, cost calculation).
 3. System Architecture & Tech Stack
 Frontend Framework: React 19+ (Vite recommended).
 Styling: Tailwind CSS (Theme: Space/Dark Mode, Glassmorphism).
-Local Database: IndexedDB (via a wrapper) for storing images, user profiles, and history locally to ensure privacy and speed.
+Backend & Database: Supabase (PostgreSQL) for structured data.
+Authentication: Supabase Auth.
+Storage: Supabase Storage (Buckets) for images.
 AI Engine: Google Gemini API (@google/genai SDK).
 Image Generation: gemini-2.5-flash-image
 Image Analysis/Description: gemini-2.5-flash
@@ -20,15 +22,15 @@ Hosting: Static hosting (Vercel/Netlify/GitHub Pages).
 
 4. Functional Modules
 4.1. Onboarding & Authentication
-Goal: Establish a connection to the AI provider without a traditional backend login.
-FR 1.1 - API Key Management:
-The app must allow users to input their own Google Gemini API Key.
-Support for a pre-configured Environment Variable key (process.env.API_KEY) for hosted demo instances.
-Keys must be stored locally in IndexedDB (not cookies/localstorage) for security.
+Goal: Secure user identity and data synchronization.
+FR 1.1 - User Authentication:
+Implement Supabase Auth for user signup/login.
+Support Email/Password and potentially Social Providers (Google).
+Secure session management.
 
-
-FR 1.2 - Validation:
-The system must validate that the key starts with "AIza" and has the correct length.
+FR 1.2 - Profile Setup:
+Create user profile record in Supabase upon registration.
+Allow user to input Gemini API Key (stored securely in user settings/profile if required, or managed via env vars if centralized).
 
 
 4.2. User Profile (Base Models)
@@ -43,7 +45,9 @@ Users must assign a category to the photo (e.g., "Casual", "Formal") based on th
 
 
 FR 2.3 - Storage:
-Photos are stored as Base64 strings or Blobs in IndexedDB.
+FR 2.3 - Storage:
+Photos are uploaded to Supabase Storage buckets.
+Metadata (paths, category) stored in Supabase Database.
 
 
 4.3. Wardrobe Management
@@ -102,7 +106,8 @@ Download button to save to device.
 4.5. History & Gallery
 Goal: Review past generations.
 FR 5.1 - Archives:
-Automatically save every successful generation to IndexedDB.
+FR 5.1 - Archives:
+Automatically save every successful generation to Supabase Database and Storage.
 
 
 FR 5.2 - Feedback System:
@@ -125,7 +130,8 @@ Users can edit the specific System Prompt associated with a category.
 
 
 FR 6.2 - Data Management:
-"Nuclear Option": Button to clear all local data (Images, History, Wardrobe).
+FR 6.2 - Data Management:
+"Delete Account": Option to delete user account and all associated data from Supabase.
 
 
 FR 6.3 - PWA Installation:
@@ -140,7 +146,9 @@ App load time should be under 2 seconds (using Service Workers).
 
 
 NFR 2 - Privacy:
-All user images must remain on the device (IndexedDB) and are only sent to Google's API transiently for generation. No intermediate server storage.
+NFR 2 - Privacy & Security:
+User data is stored securely in Supabase with Row Level Security (RLS) policies.
+Images are stored in private buckets accessible only to the authenticated user.
 
 
 NFR 3 - Offline Capability:
@@ -167,11 +175,12 @@ Feedback: A progress bar with changing text labels (e.g., "Analyzing Texture" ->
 6.3 Receipt View
 A collapsible "Receipt" card showing the breakdown of Input Tokens + Output Image cost = Total Cost.
 
-7. Data Models (Schema)
-To support IndexedDB, the following interfaces are required:
-UserPhoto: { id, dataUrl, categoryId, createdAt }
-WardrobeItem: { id, dataUrl, description, categoryId, isFavorite, createdAt }
-Category: { id, label, prompt }
-TryOnResult: { id, originalId, clothingDataUrl, resultDataUrl, timestamp, costAnalysis, feedback }
-Settings: `{ apiKey, useEnvKey }
+7. Data Models (Supabase Schema)
+Tables required in PostgreSQL:
+- profiles: { id (uuid), email, created_at }
+- user_photos: { id, user_id, storage_path, category_id, created_at }
+- wardrobe_items: { id, user_id, storage_path, description, category_id, is_favorite, created_at }
+- categories: { id, label, prompt, user_id (optional for custom) }
+- try_on_results: { id, user_id, original_photo_id, clothing_item_id, result_storage_path, timestamp, cost_analysis, feedback }
+- settings: { user_id, api_key (encrypted), theme_preference }
 
